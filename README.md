@@ -1,6 +1,6 @@
 # GeoTrellis Viewer
 
-* A simple ZXY tile server for GeoTrellis tilesets *
+*A simple ZXY tile server for GeoTrellis tilesets*
 
 Viewer is a tool for GeoTrellis administrators and developers to inspect ingested datasets in GeoTrellis.
 It is also a fairly simple GeoTrellis application and can hopefully serve as a starting point for developers building custom services with GeoTrellis.
@@ -17,7 +17,7 @@ Before you can use Viewer you need to ingest some data with GeoTrellis, so pleas
 With data ingested, you can deploy Viewer to have a simple tile service, amenable to viewing with a browser-based library such as [Leaflet](http://leafletjs.com/) or [OpenLayers](http://openlayers.org/). 
 
 Viewer needs to be configured with a few details such as the Amazon S3 bucket where data tiles are stored.
-Please see [settings.conf] for an example configuration.
+Please see [settings.conf]() for an example configuration.
 
 ### Endpoint reference
 
