@@ -20,6 +20,8 @@ pomIncludeRepository := { _ => false }
 
 resolvers += Resolver.bintrayRepo("azavea", "geotrellis")
 
+fork in run := true
+
 libraryDependencies ++= Seq(
   "com.azavea.geotrellis" %% "geotrellis-spark-etl" % "0.10.0-RC4",
   "com.azavea.geotrellis" %% "geotrellis-s3" % "0.10.0-RC4",

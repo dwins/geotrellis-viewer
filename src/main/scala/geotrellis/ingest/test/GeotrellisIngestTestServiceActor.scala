@@ -68,14 +68,22 @@ trait GeotrellisIngestTestService extends HttpService {
 
   def serviceRoute = get {
     pathPrefix("gt") {
+      pathPrefix("meta")(meta) ~
       pathPrefix("tms")(tms) ~
       pathPrefix("breaks")(breaks)
     } ~
     pathEndOrSingleSlash {
-      getFromFile(staticPath + "/index.html")
+      getFromResource("geotrellis/viewer/index.html")
     } ~
     pathPrefix("") {
-      getFromDirectory(staticPath)
+      getFromResourceDirectory("geotrellis/viewer")
+    }
+  }
+
+  def meta = {
+    import DefaultJsonProtocol._
+    complete {
+      attributeStore.layerIds.groupBy(_.name).mapValues(_.map(_.zoom).sorted)
     }
   }
 
@@ -85,7 +93,12 @@ trait GeotrellisIngestTestService extends HttpService {
     ) { (numBreaks) =>
       import DefaultJsonProtocol._
 
-      val data = reader.read[SpatialKey, Tile, TileLayerMetadata[SpatialKey]](layerId(layer))
+      val data = (reader
+        .read[SpatialKey, Tile, TileLayerMetadata[SpatialKey]](layerId(layer))
+        .sample(false, // sample without replacement
+          0.10)
+      )
+
       val breaks = data.classBreaks(numBreaks)
       val doubleBreaks = data.classBreaksDouble(numBreaks)
 
@@ -95,7 +108,7 @@ trait GeotrellisIngestTestService extends HttpService {
 
   val missingTileHandler = ExceptionHandler {
     case ex: TileNotFoundError => respondWithStatus(404) {
-      complete("No tile: ${ex.getMessage}")
+      complete(s"No tile: ${ex.getMessage}")
     }
   }
 
@@ -121,9 +134,21 @@ trait GeotrellisIngestTestService extends HttpService {
               "classBreaksDouble" -> tile.classBreaksDouble(100).toJson))
         } ~
         pathPrefix("histo") {
+          val histo = tile.histogram
+          val histoD = tile.histogramDouble
+          val formattedHisto = {
+            val buff = scala.collection.mutable.Buffer.empty[(Int, Long)]
+            histo.foreach((v, c) => buff += ((v, c)))
+            buff.to[Vector]
+          }
+          val formattedHistoD = {
+            val buff = scala.collection.mutable.Buffer.empty[(Double, Long)]
+            histoD.foreach((v, c) => buff += ((v, c)))
+            buff.to[Vector]
+          }
           complete(
-            JsObject("histo" -> tile.histogram.values.toJson,
-              "histoDouble" -> tile.histogramDouble.values.toJson)
+            JsObject("histo" -> formattedHisto.toJson,
+              "histoDouble" -> formattedHistoD.toJson)
           )
         } ~
         pathPrefix("stats") {
@@ -136,22 +161,24 @@ trait GeotrellisIngestTestService extends HttpService {
       } ~
       pathEnd { 
         parameters(
-          'breaks?,
+          'breaks,
+          'nodataColor ?,
           'colorRamp ? "blue-to-red"
-        ) { (breaksParam, colorRamp) =>
+        ) { (breaksParam, nodataColor, colorRamp) =>
 
           import geotrellis.raster._
 
           val ramp = ColorRampMap.getOrElse(colorRamp, ColorRamps.BlueToRed)
-          val colorOptions = ColorMap.Options.DEFAULT.copy(noDataColor = 0x00000099)
-          val colorMap = 
-            breaksParam match {
-              case None | Some("") =>
-                ramp.toColorMap(tile.histogram, colorOptions)
-              case Some(breaksString) => 
-                val breaks = breaksString.split(",").map(_.toDouble)
-                ramp.toColorMap(breaks, colorOptions)
-            }
+          val Color = """0x(\p{XDigit}{8})""".r
+          val colorOptions = nodataColor match {
+            case Some(Color(c)) =>
+              ColorMap.Options.DEFAULT.copy(noDataColor = java.lang.Long.parseLong(c, 16).toInt)
+            case _ => ColorMap.Options.DEFAULT
+          }
+          val colorMap =  {
+            val breaks = breaksParam.split(",").map(_.toDouble)
+            ramp.toColorMap(breaks, colorOptions)
+          }
 
           respondWithMediaType(MediaTypes.`image/png`) {
             val result = tile.renderPng(colorMap).bytes
