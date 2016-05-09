@@ -26,7 +26,7 @@ libraryDependencies ++= Seq(
   "com.azavea.geotrellis" %% "geotrellis-spark-etl" % "0.10.0",
   "com.azavea.geotrellis" %% "geotrellis-s3" % "0.10.0",
   "org.apache.spark" %% "spark-core" % "1.5.2" % "provided",
-  "com.azavea.geotrellis" %% "geotrellis-raster"    % "0.10.0-RC4",
+  "com.azavea.geotrellis" %% "geotrellis-raster"    % "0.10.0",
   "io.spray"              %% "spray-routing"        % "1.3.3",
   "io.spray"              %% "spray-can"            % "1.3.3",
   "org.scalatest"       %%  "scalatest"      % "2.2.0" % "test"
