@@ -17,7 +17,7 @@ Before you can use Viewer you need to ingest some data with GeoTrellis, so pleas
 With data ingested, you can deploy Viewer to have a simple tile service, amenable to viewing with a browser-based library such as [Leaflet](http://leafletjs.com/) or [OpenLayers](http://openlayers.org/). 
 
 Viewer needs to be configured with a few details such as the Amazon S3 bucket where data tiles are stored.
-Please see [settings.conf]() for an example configuration.
+Please see [src/main/resources/application.conf]() for details.
 
 ### Endpoint reference
 
@@ -43,11 +43,11 @@ All dynamic endpoints are under the `gt` prefix to avoid collisions with static 
 For reference, here is the command (slightly obfuscated) that I've been using to rebuild and upload to the EC2 VM that I have been testing on:
 
 ```
-$ ./sbt assembly && rsync -e 'ssh -i ~/geotrellis.pem' target/scala-2.10/geotrellis-ingest-test-assembly-0.1.0.jar settings.conf user@<machine>.amazonaws.com: -P
+$ ./sbt assembly && rsync -e 'ssh -i ~/geotrellis.pem' target/scala-2.10/geotrellis-ingest-test-assembly-0.1.0.jar user@<machine>.amazonaws.com: -P
 ```
 
 And to run on the VM:
 
 ```
-$ java -cp /usr/lib/spark/lib/spark-assembly.jar:geotrellis-ingest-test-assembly-0.1.0.jar -Dconfig.file=settings.conf geotrellis.ingest.test.Server
+$ java -cp /usr/lib/spark/lib/spark-assembly.jar:geotrellis-ingest-test-assembly-0.1.0.jar geotrellis.ingest.test.Server
 ```
